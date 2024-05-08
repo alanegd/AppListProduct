@@ -27,25 +27,44 @@ import com.example.applistproduct.ui.screens.components.ProductList
 @Composable
 fun FindProductScreen() {
     val productName = remember {mutableStateOf("")}
-    val numberOfProducts = 50
+    val numberOfProducts = remember {mutableStateOf("")}
     val products = remember { mutableStateOf(emptyList<Product>()) }
 
     val productRepository = ProductRepositoryFactory.getProductRepository()
 
     Scaffold { paddingValues ->
         Column(modifier = Modifier.padding(paddingValues)) {
-            SearchBar(productName) {
-                productRepository.getProducts(productName.value, numberOfProducts) { response ->
-                    products.value = response
+            SearchBar(productName, "Search product")
+
+            SearchBar(numberOfProducts, "Select product quantity")
+
+            val onShowProductsClick = {
+                if (numberOfProducts.value.toInt() > 0) {
+                    productRepository.getProducts(productName.value, numberOfProducts.value.toInt()) { response ->
+                        products.value = response
+                    }
+                }
+                else {
+                    products.value = emptyList()
                 }
             }
+
+            Spacer(modifier = Modifier.width(16.dp))
+            Button(
+                onClick = onShowProductsClick,
+                modifier = Modifier
+                    .padding(start = 16.dp)
+            ) {
+                Text("Show products")
+            }
+
             ProductList(products)
         }
     }
 }
 
 @Composable
-fun SearchBar(productName: MutableState<String>, onShowProductsClick: () -> Unit) {
+fun SearchBar(input: MutableState<String>, placeholder: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -53,12 +72,12 @@ fun SearchBar(productName: MutableState<String>, onShowProductsClick: () -> Unit
         verticalAlignment = Alignment.CenterVertically
     ) {
         OutlinedTextField(
-            value = productName.value,
+            value = input.value,
             onValueChange = {
-                productName.value = it
+                input.value = it
             },
             placeholder = {
-                Text(text = "Product name")
+                Text(text = placeholder)
             },
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Text,
@@ -67,13 +86,5 @@ fun SearchBar(productName: MutableState<String>, onShowProductsClick: () -> Unit
             modifier = Modifier
                 .weight(1f)
         )
-        Spacer(modifier = Modifier.width(16.dp))
-        Button(
-            onClick = onShowProductsClick,
-            modifier = Modifier
-                .padding(start = 16.dp)
-        ) {
-            Text("Show products")
-        }
     }
 }
